@@ -147,6 +147,10 @@
       background-color: #ffeec2;
       color: #c49023;
     }
+
+    .error {
+      color: red;
+    }
   </style>
   <title>Calculadora - React Profissional</title>
 </head>
@@ -158,6 +162,8 @@
   <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script type="text/babel">
+
+    const calcRegex = /^([0-9]|-|\+|\*|\/|\.)*$/
 
     // Header
     const Header = () => (
@@ -175,6 +181,7 @@
     // Calculator
     const Calculator = () => {
       const [display, setDisplay] = React.useState("");
+      const [error, setError] = React.useState();
 
       const keyboard = [
         7, 8, 9, '/', 'C',
@@ -183,10 +190,22 @@
         0, '.', '+', '=',
       ];
 
+      React.useEffect(() => {
+        if (error) setError()
+      }, [display])
+
+      const doTheMath = () => {
+        try {
+          setDisplay(eval(display))
+        } catch (e) {
+          setError(`Expressão inválida: ${e}`)
+        }
+      }
+
       const handleClick = (value) => {
         switch (value) {
           case '=':
-            setDisplay(eval(display))
+            doTheMath()
             break
           case 'C':
             setDisplay('')
@@ -196,20 +215,27 @@
             break
           default:
             setDisplay(display + value)
-
         }
       }
 
       return (
         <div className="calculator">
           <input
-            type="number"
+            type="text"
             className="display"
             value={display}
-            onChange={(event) => {
-              setDisplay(event.target.value)
+            onChange={event => {
+              const { value } = event.target
+              if (calcRegex.test(value)) setDisplay(event.target.value)
+            }}
+            onKeyPress={event => {
+              if (event.key === 'Enter') doTheMath()
+              if (event.key.toLowerCase() === 'c') setDisplay('')
             }}
           />
+          {error && (
+            <p className="error">{error}</p>
+          )}
 
           <div className="keyboard">
             {keyboard.map(value => {
